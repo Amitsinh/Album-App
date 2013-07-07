@@ -290,5 +290,16 @@
 
         }
 
-
+		function viewalbum()
+        {
+            $facebook = new Facebook(array(
+                'appId'  => appId,
+                'secret' => appSecret,
+            ));
+            $photos = $facebook->api('/'.$_REQUEST['id'].'?fields=photos.fields(source)&access_token='.$facebook->getAccessToken());
+            for($i=0;$i<count($photos['photos']['data']);$i++)
+            {
+                echo "<a href='".$photos['photos']['data'][$i]['source']."'class='fancybox' data-fancybox-group='gallery'></a>";
+            }
+        }
 }

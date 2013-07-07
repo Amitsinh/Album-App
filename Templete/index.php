@@ -12,14 +12,10 @@
     <link rel="stylesheet" href="lib/css/foundation.css" />
     <script src="lib/js/vendor/custom.modernizr.js"></script>
 
-<!--    Glisse-->
-    <meta name="HandheldFriendly" content="True">
-    <meta name="MobileOptimized" content="320">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-    <link rel="stylesheet" href="lib/css/glisse.css" />
     <link rel="stylesheet" href="lib/css/app.css" />
-<style>
+    <link rel="stylesheet" href="lib/css/jquery.fancybox.css" />
+
+    <style>
     .ajax_loader {
         background: url("lib/images/spinner_squares_circle.gif") no-repeat center center transparent;
         width:100%;
@@ -31,27 +27,19 @@
 
 <!--Script-->
 <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-<script src="lib/js/ajaxloader.min.js"></script>
-<script src="lib/js/glisse.js"></script>
+<script src="lib/js/swipe.js"></script>
+<script src="lib/js/script.js"></script>
 <script src="lib/js/foundation.min.js"></script>
 <script src="lib/js/foundation/foundation.interchange.js"></script>
 <script src="lib/js/ajaxloader.js"></script>
+<script src="lib/js/jquery.fancybox.js"></script>
+<script src="lib/js/jquery.fancybox.pack.js"></script>
+
 
 <script>
 
     $(document).ready(function() {
         $('#dumpLink').hide();
-
-    });
-
-    $(function () {
-        $('.tl').glisse({speed: 200, changeSpeed: 250, effect:'bounce', fullscreen: true});
-        $('#changefx').change(function() {
-            var val = $(this).val();
-            $('.tl').each(function(){
-                $(this).data('glisse').changeEffect(val);
-            });
-        });
     });
     document.write('<script src=' +
             ('__proto__' in {} ? 'lib/js/vendor/zepto' : 'lib/js/vendor/jquery') +
@@ -111,7 +99,7 @@
             {
                 hideAjaxLoader();
                 $('input:checkbox').removeAttr('checked');
-                if(Result==1)
+                if(move==0)
                 {
                     $('#dumpLink').show();
                 }
@@ -122,7 +110,7 @@
     function zip()
     {
         window.location = 'home/getzip';
-        
+        $('#zip_link').hide();
         $('#dumpLink').hide();
 
     }
@@ -219,7 +207,7 @@
     <div class="row" style="max-width: 100%;background-color: #ffffff;margin-top: 5px">
 
             <div id="dumpLink" class="panel large-5 columns" style="display:none;padding: 0px">
-                <p>File Link &nbsp;&nbsp; <a id="zip_link" name="zip_link" onclick="zip();">http://<?php echo $_SERVER['HTTP_HOST'] ?>/AlbumApp/Dump/<?php echo $_SESSION['user_id'] ?>.zip</a></p>
+                <p>File Link &nbsp;&nbsp; <a id="zip_link" name="zip_link" onclick="zip();"><?php echo $_SERVER['HTTP_HOST'] ?>/AlbumApp/Dump/<?php echo $_SESSION['user_id'] ?>.zip</a></p>
             </div>
             <ul class="button-group" style="float: right">
                 <li><input id='da' type="button" class="small button" value="Download All" onclick="downloadalbum(this.id);"></li>
@@ -239,49 +227,40 @@
             </ul>
                 </div>
 
-    <div id="content">
+
+    <div class="row">
             <?php
-//
             if ($user) {?>
                 <script>showAjaxLoader();</script>
 
                <?php
 //                     Proceed knowing you have a logged in user who's authenticated.
-                    $albums = $facebook->api('/me?fields=albums.fields(cover_photo,name)&access_token='.$facebook->getAccessToken());
+                    $albums = $facebook->api('/me?fields=albums.fields(photos.limit(1).fields(source),name)&access_token=' .$facebook->getAccessToken());
 
-                    for($i=0;$i<count($albums['albums']['data']);$i++)
+                for($i=0;$i<count($albums['albums']['data']);$i++)
                     {
-                        $photos = $facebook->api("/{$albums['albums']['data'][$i]['id']}/photos");
-                        if($photos['data'])
-                        {
+                        if(isset($albums['albums']['data'][$i]['photos'])){
                         ?>
                             <ul class="stack">
                                 <input type="checkbox" class="album_check" name="album_checkbox[]" value='<?php echo $albums['albums']['data'][$i]['id'];?>' style="z-index:2;position: absolute;left:15px;top:14px">
-                               
+                                <input type="button"  style="background-image:url(lib/images/icon1.png);height:18px;width:20px;z-index:4;position: absolute;top:14px;right:63px;cursor: pointer" id="<?php echo $albums['albums']['data'][$i]['id'];?>_d" onclick="single(this.id)">
                                 <?php
                                     if(isset($_SESSION['sessionToken']))
                                     {
                                         if($_SESSION['sessionToken']!="")
                                     {   ?>
-                                <input type="button" style="background-image:url(lib/images/icon2.png);height:18px;width:20px;z-index:3;position: absolute;top:14px;right:63px;cursor: pointer" id="<?php echo $albums['albums']['data'][$i]['id'];?>_p" onclick="single(this.id)">
+                                <input type="button" style="background-image:url(lib/images/icon2.png);height:18px;width:20px;z-index:3;position: absolute;top:14px;right:40px;cursor: pointer" id="<?php echo $albums['albums']['data'][$i]['id'];?>_p" onclick="single(this.id)">
                             <?php
                                 }
-                            } ?>
-				 <input type="button"  style="background-image:url(lib/images/icon1.png);height:18px;width:20px;z-index:4;position: absolute;top:14px;right:40px;cursor: pointer" id="<?php echo $albums['albums']['data'][$i]['id'];?>_d" onclick="single(this.id)">
-                            <?php 
-				 for($j=0;$j<count($photos['data']);$j++)
-                            {
+                            }
+
                                 set_time_limit(0);
-                                if($j==0 or $j==(count($photos['data'])-1))
-                                {   ?>
-                                    <li><img src="<?php  echo $photos['data'][$j]['source']?>" rel="<?php echo $i ?>" style="height: 200px;width: 200px;z-index:1" data-glisse-big="<?php  echo $photos['data'][$j]['source']?>" class="tl" title="<?php echo $albums['albums']['data'][$i]['name']?> " /></li>
-                                <?php
-                                }else{  ?>
-                                    <li><img rel="<?php echo $i ?>" style="height: 200px;width: 200px;z-index:1" data-glisse-big="<?php  echo $photos['data'][$j]['source']?>" class="tl"/></li>
-                                <?php
-                                }
-                            }?>
-                        </ul>
+                           ?>
+                           <a onclick="viewalbum('<?php echo $albums['albums']['data'][$i]['id'] ?>');">
+                                <li><img src="<?php  echo $albums['albums']['data'][$i]['photos']['data'][0]['source']?>" style="height: 200px;width: 200px;z-index:1" title="<?php echo $albums['albums']['data'][$i]['name']?> " /></li>
+                           </a>
+
+                           </ul>
                 <?php }
                 }   ?>
                 <script>hideAjaxLoader();</script>
@@ -290,7 +269,7 @@
     </div><br>
 
     <?php }   ?>
-
+    <div id="gallery"> </div>
   </body>
 
 </html>
