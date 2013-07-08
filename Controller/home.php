@@ -8,7 +8,7 @@
             $facebook = new Facebook(array(
                 'appId'  => appId,
                 'secret' => appSecret,
-			    'cookie' => true,
+                'cookie' => true,
             ));
 
             $user = $facebook->getUser();
