@@ -1,7 +1,6 @@
 <?php
     require 'lib/facebook-php-sdk-master/src/facebook.php';
     require 'picasa.php';
-//    require 'ZipArchive.php';
 
 	class home{
         function display()
@@ -28,11 +27,11 @@
                     // check user exisit if yes then set use_name & picasa_token into session
 
                     $checkUser = $db->fetch_all_array("SELECT
-														*
-												      FROM
-												   		user_master
-												      WHERE
-												    	facebook_id = ".$userinfo['id']);
+                    						*
+						       FROM
+								user_master
+						       WHERE
+								facebook_id = ".$userinfo['id']);
 
                     if(!$checkUser)
                     {
@@ -68,16 +67,13 @@
 
         function downloadalbum()
         {
-//            error_reporting(E_ERROR);
-            //Change
-            //Zip name="Username_ID"
-            //Folder name appropriate Album name
+            error_reporting(E_ERROR);
             $albumId=$_REQUEST['selected_checkbox'];
             $move=$_REQUEST['move'];
-//            $_SESSION['sessionToken']='1/tkIrE19BJxe-ANVzqOXbjVjb4VKGZlgEeFnUaV8ndrI';
+
             if($move==1)
             {
-            $client = picasa::getAuthSubHttpClient();
+	            $client = picasa::getAuthSubHttpClient();
             }
 
 
@@ -184,11 +180,8 @@
 
 
                 $zip->close();
-		 echo "1";
-
-            }else{
-		echo "0";
-	     }
+	    }
+            
             //delete folder
             if(is_dir($basePath.$userId))
             {
@@ -290,7 +283,7 @@
 
         }
 
-		function viewalbum()
+	function viewalbum()
         {
             $facebook = new Facebook(array(
                 'appId'  => appId,
