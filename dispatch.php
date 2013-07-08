@@ -5,10 +5,7 @@
 	$val = str_replace('','',$_SERVER['REDIRECT_URL']);
 	$valArray = explode('/',$val);
 	
-       
 	$apiArray = array();
-	
-	//$apiArray[''] = 'Controller/home.php';
 	$apiArray['home'] = 'Controller/home.php';
        $apiArray['picasa'] = 'Controller/picasa.php';
 
@@ -17,18 +14,15 @@
 	$methodName = isset($valArray[2]) ? $valArray[2]   : "display";
 
 	if($className=="none")
-    {
+	{
         header('Location:http://50.112.48.91/home');
         exit;
-    }
+       }
 	if (!isset($_SESSION['user_id']) && isset($valArray[2]) or !isset($_SESSION['user_id']) && $valArray[1]=="picasa") {
 		header('Location:http://50.112.48.91/home');
 		exit;
 	}
 
-
-if($valArray[1]!='Dump')
-{
 
 	require_once('config.php');
 	require_once 'Db/Db.php';
@@ -37,10 +31,9 @@ if($valArray[1]!='Dump')
 	$objClass = new $className;
 	if((int)method_exists($objClass, $methodName)){
 			$objClass->$methodName();
-	}else{
-			echo "<h1>Default method not found!";
-		}
-
-}
+	}
+       else{
+		echo "<h1>Default method not found!";
+	}
 	
 ?>
