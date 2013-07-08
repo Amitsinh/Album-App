@@ -8,21 +8,26 @@
        
 	$apiArray = array();
 	
-	$apiArray[''] = 'Controller/home.php';
+	//$apiArray[''] = 'Controller/home.php';
 	$apiArray['home'] = 'Controller/home.php';
        $apiArray['picasa'] = 'Controller/picasa.php';
 
 
-	$className = isset($apiArray[$valArray[1]]) && strlen($valArray[1]) > 0 ? $valArray[1]   : "home";
+	$className = isset($apiArray[$valArray[1]]) && strlen($valArray[1]) > 0 ? $valArray[1]   : "none";
 	$methodName = isset($valArray[2]) ? $valArray[2]   : "display";
 
-//    Check for uses session
-	if (!isset($_SESSION['user_id']) && $className!="home") {
-		header('Location:/home');
+	if($className=="none")
+    {
+        header('Location:http://50.112.48.91/home');
+        exit;
+    }
+	if (!isset($_SESSION['user_id']) && isset($valArray[2]) or !isset($_SESSION['user_id']) && $valArray[1]=="picasa") {
+		header('Location:http://50.112.48.91/home');
 		exit;
 	}
 
-if($valArray[0]!='Dump')
+
+if($valArray[1]!='Dump')
 {
 
 	require_once('config.php');
@@ -33,13 +38,9 @@ if($valArray[0]!='Dump')
 	if((int)method_exists($objClass, $methodName)){
 			$objClass->$methodName();
 	}else{
-		$methodName = "display";
-	if((int)method_exists($objClass, $methodName)){
-		$objClass->$methodName();
-		}else{
 			echo "<h1>Default method not found!";
 		}
-	}
+
 }
 	
 ?>
