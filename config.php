@@ -3,12 +3,6 @@
 	define('DB_USER',"root");
 	define('DB_PASS',"admin");
 	define('DB_DATABASE',"album_app");
-    
-	define('basePath',"Dump/");
-    	if(isset($_SESSION['user_id']))
-    	{
-       	 define('userId',$_SESSION['user_id']);
-    	}
 
     //Facebook Credential
     define('appId','478199228917139');

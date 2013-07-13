@@ -59,7 +59,7 @@ Zend_Loader::loadClass('Zend_Gdata_App_Extension_Category');
             }
 
         }
-        function addPhoto($client, $albumId, $photo,$extension,$filename,$type)
+        function addPhoto($client, $albumId, $photo,$extension,$filename)
         {
 
             $photos = new Zend_Gdata_Photos($client);
@@ -72,15 +72,11 @@ Zend_Loader::loadClass('Zend_Gdata_App_Extension_Category');
             $entry->setTitle($photos->newTitle($filename));
 
             $albumQuery = new Zend_Gdata_Photos_AlbumQuery;
-            $albumQuery->setUser("default");
-            if($type=='single')
-            {
-                $albumQuery->setAlbumId("default");
-            }else
-            {
-                $albumQuery->setAlbumId($albumId);
-            }
-            $result = $photos->insertPhotoEntry($entry, $albumQuery->getQueryUrl());
+            $albumQuery->setAlbumId($albumId);
+
+            $albumEntry = $photos->getAlbumEntry($albumQuery);
+
+            $result = $photos->insertPhotoEntry($entry, $albumEntry);
 
         }
         function addAlbum($client, $name)
