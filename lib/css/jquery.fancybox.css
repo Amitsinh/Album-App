@@ -106,7 +106,28 @@
 	cursor: pointer;
 	z-index: 8040;
 }
+.fancybox-download {
+    position: absolute;
+    top: 17px;
+    right: 18px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    z-index: 8040;
+    background: url('../images/icon1.png') center center no-repeat;
 
+}
+.fancybox-share {
+    position: absolute;
+    top: 17px;
+    right: 40px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    z-index: 8040;
+    background: url('../images/icon2.png') center center no-repeat;
+
+}
 .fancybox-nav {
 	position: absolute;
 	top: 0;
