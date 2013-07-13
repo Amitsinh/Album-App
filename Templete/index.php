@@ -27,17 +27,16 @@
 <script src="lib/js/swipe.js"></script>
 <script src="lib/js/AlbumApp.js"></script>
 <script src="lib/js/foundation.min.js"></script>
+<script src="lib/js/vendor/zepto.js"></script>
 <script src="lib/js/ajaxloader.js"></script>
 <script src="lib/js/jquery.fancybox.js"></script>
-<script src="lib/js/jquery.fancybox.pack.js"></script>
 
 <script type="text/javascript">
+
     $(document).ready(function() {
         $('#dumpLink').hide();
+        $('.progress').hide();
     });
-    document.write('<script src=' +
-            ('__proto__' in {} ? 'lib/js/vendor/zepto' : 'lib/js/vendor/jquery') +
-            '.js><\/script>')
     $(document).foundation();
 
 </script>
@@ -98,10 +97,13 @@
 
     <?php } else {?>
 
-            <div class="row" style="max-width: 100%;background-color: #ffffff;margin-top: 5px">
+            <div class="row" style="max-width: 100%;background-color: #ffffff;">
 
-                    <div id="dumpLink" class="panel large-5 columns" style="display:none;padding: 0px">
-                        <p>File Link &nbsp;&nbsp; <a id="zip_link" name="zip_link" onclick="zip();">Download File</a></p>
+                    <div id="dumpLink" class="panel columns" style="z-index: 8050;width: 100%;display:none;padding: 0px">
+                        <p style="font-size: 12px"><a id="zip_link" name="zip_link" onclick="zip();">Download Zip</a><br>
+                        or <br>
+                            <a onclick="email();">Notify me</a> at <?php echo $_SESSION['email'];?><br>when archive will be ready for download.
+                        </p>
                     </div>
 
                     <ul class="button-group" style="float: right">
@@ -121,10 +123,25 @@
                         }
                         ?>
                     </ul>
+
             </div>
 
-
             <div class="row">
+                <div class="row" style="width: 95%;margin-left: 9px;">
+                    <div id='alertbox' class="alert-box" style="display:none;">
+                        <div id="msg"></div>
+                        <a onclick="alertclose();" class="close">&times;</a>
+                    </div>
+
+                        <div class="progress success round">
+                            <span class="meter" style="width:0%"></span>
+                            <br>
+                            <lable  style="margin-left: 5px;"><span class="pr_album">Preparing&nbsp;&nbsp;</span><img src='lib/images/ajax-loader.gif' style="margin-left: 10px"></lable>
+                        <lable class="pr_photos" style="float: right;margin-right: 5px;"></lable>
+
+                    </div>
+                    <br>
+                </div>
                 <?php
                     if ($user) {
                 ?>
@@ -133,31 +150,38 @@
                 //          Proceed knowing you have a logged in user who's authenticated.
                             $albums = $facebook->api('/me?fields=albums.fields(photos.limit(1).fields(source),name)&access_token=' .$facebook->getAccessToken());
 
+    		if(isset($albums['albums']['data']))
+			{	
                         for($i=0;$i<count($albums['albums']['data']);$i++)
                             {
                                 if(isset($albums['albums']['data'][$i]['photos'])){
                                 ?>
                                     <ul class="stack">
                                         <input type="checkbox" class="album_check" name="album_checkbox[]" value='<?php echo $albums['albums']['data'][$i]['id'];?>' style="z-index:2;position: absolute;left:15px;top:14px">
-                                        <input type="button"  style="background-image:url(lib/images/icon1.png);height:18px;width:20px;z-index:4;position: absolute;top:14px;right:63px;cursor: pointer" id="<?php echo $albums['albums']['data'][$i]['id'];?>_d" onclick="single(this.id)">
+						<input type="button"  style="background-image:url(lib/images/icon1.png);height:18px;width:20px;z-index:4;position: absolute;top:14px;right:40px;cursor: pointer" id="<?php echo $albums['albums']['data'][$i]['id'];?>_d" onclick="single(this.id)">
                                         <?php
                                             if(isset($_SESSION['sessionToken']))
                                             {
                                                 if($_SESSION['sessionToken']!="")
                                             {   ?>
-                                        <input type="button" style="background-image:url(lib/images/icon2.png);height:18px;width:20px;z-index:3;position: absolute;top:14px;right:40px;cursor: pointer" id="<?php echo $albums['albums']['data'][$i]['id'];?>_p" onclick="single(this.id)">
+                                        <input type="button" style="background-image:url(lib/images/icon2.png);height:18px;width:20px;z-index:3;position: absolute;top:14px;right:63px;cursor: pointer" id="<?php echo $albums['albums']['data'][$i]['id'];?>_p" onclick="single(this.id)">
                                         <?php
                                             }
                                         }
                                             set_time_limit(0);
                                        ?>
-                                       <a onclick="viewalbum('<?php echo $albums['albums']['data'][$i]['id'] ?>');">
+                                        
+                                        <a onclick="viewalbum('<?php echo $albums['albums']['data'][$i]['id'] ?>');">
                                             <li><img src="<?php  echo $albums['albums']['data'][$i]['photos']['data'][0]['source']?>" style="height: 200px;width: 200px;z-index:1" title="<?php echo $albums['albums']['data'][$i]['name']?> " /></li>
                                        </a>
 
                                    </ul>
                         <?php }
-                        }   ?>
+                        }  
+			}else
+			{
+				echo 'There Is no Album....';	
+			} ?>
                 <script>hideAjaxLoader();</script>
 
          <?php } ?>
