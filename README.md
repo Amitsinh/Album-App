@@ -19,7 +19,7 @@ Album
 
 <pre>
 
-    .........................
+  	.........................
   	.........................
 	require_once('config.php');
 	require_once 'Db/Db.php';
@@ -39,7 +39,7 @@ Album
 <pre>
 	1. facebook-php-sdk-master
 	2. foundation-4.2.2
-  3. ZendGdata-1.12.3 
+  	3. ZendGdata-1.12.3 
 	4. Ajaxloder
 	5. touchSwipe
 	6. fancybox	
