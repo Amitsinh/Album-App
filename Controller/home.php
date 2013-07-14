@@ -1,6 +1,8 @@
 <?php
     require 'lib/facebook-php-sdk-master/src/facebook.php';
     require 'picasa.php';
+    require 'PHPMailer/class.phpmailer.php';
+
 
 	class home{
 
@@ -41,11 +43,11 @@
                         $data3['username']=$userinfo['username'];
                         $data3['name']=$userinfo['name'];
                         $id=$db->query_insert("user_master",$data3);
-                        $_SESSION['user_name']=$userinfo['username'];
+                        $_SESSION['user_name']=$userinfo['name'];
                         $_SESSION['user_id']=$id;
 
                     }else{
-                        $_SESSION['user_name']=$checkUser[0]['username'];
+                        $_SESSION['user_name']=$checkUser[0]['name'];
                         $_SESSION['sessionToken']=$checkUser[0]['picasa_token'];
                         $_SESSION['user_id']=$checkUser[0]['id'];
 
@@ -81,6 +83,8 @@
 
         function email()
         {
+            error_reporting(E_ERROR);
+
             $message = '<html>
 
                             <body>
@@ -96,16 +100,32 @@
                             </body>
                             </html>';
 
-            $subject='Album Zip Link';
-            $to =$_SESSION['email'];
+              $subject='Album Zip Link';
+              $to =$_SESSION['email'];
 
-            // Change email address to something true to stop posting email into spam.
-            $header = "From:Notifications@AlbumApp.com\r\n";
-            //              $header = "Cc:afgh@somedomain.com \r\n";
-            $header.= "MIME-Version: 1.0\r\n";
-  	     $header .= "Content-type: text/html;charset=iso-8859-1" . "\r\n";
+		$mail = new PHPMailer;
 
-            mail ($to,$subject,$message,$header);    
+		$mail->IsSMTP();                                      // Set mailer to use SMTP
+		$mail->Host = 'smtp.gmail.com';  // Specify main and backup server
+		$mail->SMTPAuth = true;                               // Enable SMTP authentication
+		$mail->Username = 'amitsinh.chavda13@gmail.com';                            // SMTP username
+		$mail->Password = 'amit12345678';                           // SMTP password
+		$mail->SMTPSecure = 'tls';                            // Enable encryption, 'ssl' also accepted
+		
+		$mail->From = 'Notification@AlbumApp.com';
+		$mail->FromName = 'AlbumApp Notification';
+		$mail->AddAddress($_SESSION['email'], $_SESSION['user_name']);  // Add a recipient
+		$mail->WordWrap = 50;                                 // Set word wrap to 50 characters
+		$mail->IsHTML(true);                                  // Set email format to HTML
+		$mail->Subject = 'Zip Link';
+		$mail->Body    = $message;
+		
+
+		if(!$mail->Send()) {
+		    echo 'Message could not be sent.';
+		    echo 'Mailer Error: ' . $mail->ErrorInfo;
+		    exit;
+		} 
            
             
             echo $_SESSION['email'];
