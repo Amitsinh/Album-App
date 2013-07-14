@@ -43,4 +43,5 @@ Album
 	4. Ajaxloder
 	5. touchSwipe
 	6. fancybox	
+	7. PHPMailer
 </pre>
