@@ -1,8 +1,7 @@
 <?php
     require 'lib/facebook-php-sdk-master/src/facebook.php';
     require 'picasa.php';
-
-
+    
 	class home{
 
         function display()
@@ -23,7 +22,6 @@
                 {
 			$userinfo = $facebook->api('/me?fields=email,username,name&access_token=' .$facebook->getAccessToken());
 			
-                    $_SESSION['email']=$userinfo['email'];
                     $db = new Database();
                     $db->connect();
                     // check user exists if yes then set use_name & picasa_token into session
