@@ -1,6 +1,7 @@
 <?php
 require 'lib/facebook-php-sdk-master/src/facebook.php';
 require 'picasa.php';
+require 'PHPMailer/class.phpmailer.php';
 
 
     class album{
@@ -9,19 +10,18 @@ require 'picasa.php';
         function albumdetail()
         {
             //if dump folder for particuler user is available then delete old one and make new directory
-            if(is_dir(basePath.userId))
-            {
-                album::recursive_remove_directory(basePath.userId,$empty=TRUE);
-                rmdir(basePath.userId);
-            }
-            mkdir(basePath.userId);
+           $timestamp=time();
+           $path=basePath.userId.$timestamp;
+           mkdir($path);
 
-            $facebook = new Facebook(array(
+           $facebook = new Facebook(array(
                 'appId'  => appId,
                 'secret' => appSecret,
-            ));
+           ));
 
             $albumId=$_REQUEST['selected_checkbox'];
+            $_SESSION['CacheAlbum']=$_REQUEST['selected_checkbox'];
+            $_SESSION['Timestamp']=$timestamp;
             $albums=explode(',',$albumId);
             $total="";
             $result=array();
@@ -32,13 +32,34 @@ require 'picasa.php';
                 $photos = $facebook->api("/$aid/?fields=name,photos.fields(images)&access_token=".$facebook->getAccessToken());
                 $temp = str_replace('.', '-', $photos['name']);
                 $aname=preg_replace('/[^A-Za-z0-9\-]/', '', $temp);
+
                 $result[$i]['id']=$aid;
                 $result[$i]['name']=$aname;
                 $result[$i]['total']=count($photos['photos']['data']);
                 $total=$total+count($photos['photos']['data']);
             }
             $result[0]['all']=$total;
+            $result[0]['timestamp']=$timestamp;
             echo json_encode($result);
+        }
+
+	   //Check If Album Request in Cache
+        function CheckCache()
+        {
+            if($_REQUEST['move']!=1)
+            {
+                if(isset($_SESSION['CacheAlbum']))
+                {
+                    if($_SESSION['CacheAlbum']==$_REQUEST['selected_checkbox'])
+                    {
+                        echo $_SESSION['Timestamp'];
+                    }
+                }else{
+                    echo 0;
+                }
+            }else{
+                echo 0;
+            }
         }
 
         //Create Album to picasa.
@@ -46,16 +67,19 @@ require 'picasa.php';
         {
             $name=$_REQUEST['name'];
             $move=$_REQUEST['move'];
+            $timestamp=$_REQUEST['timestamp'];
+
             $AlubumId="";
+            $path=basePath.userId.$timestamp;
             $result=array();
             $facebook = new Facebook(array(
                 'appId'  => appId,
                 'secret' => appSecret,
             ));
 
-            if (!is_dir(basePath.userId.'/'.$name))
+            if (!is_dir($path.'/'.$name))
             {
-                mkdir(basePath.userId.'/'.$name);
+                mkdir($path.'/'.$name);
             }
             if($move==1)
             {
@@ -82,47 +106,59 @@ require 'picasa.php';
             $source=$_REQUEST['source'];
             $move=$_REQUEST['move'];
             $name=$_REQUEST['name'];
-
+            $timestamp=$_REQUEST['timestamp'];
+            $path=basePath.userId.$timestamp;
 
             set_time_limit(0);
             $ext=pathinfo($source);
-            copy($source,basePath.userId.'/'.$name.'/'.$ext['filename'].'.'.$ext['extension']);
+            copy($source,$path.'/'.$name.'/'.$ext['filename'].'.'.$ext['extension']);
 
             if($move==1)
             {
                 $client = picasa::getAuthSubHttpClient();
-                picasa::addPhoto($client,$_REQUEST['picasaId'],basePath.userId.'/'.$name.'/'.$ext['filename'].'.'.$ext['extension'],$ext['extension'],$ext['filename'],'Normal');
+                picasa::addPhoto($client,$_REQUEST['picasaId'],$path.'/'.$name.'/'.$ext['filename'].'.'.$ext['extension'],$ext['extension'],$ext['filename'],'Normal');
             }
         }
 
-        //Create Zip
+      
+
+         //Create Zip
         function createZip()
         {
             $move=$_REQUEST['move'];
-            album::zip($move,'');
+            album::zip($move,'',$_REQUEST['timestamp']);
         }
 
-        function zip($move,$type)
+        function zip($move,$type,$timestamp)
         {
+            $path=basePath.userId.$timestamp;
             if($move==0)
             {
                 ini_set("max_execution_time", 300);
                 // create object
                 $zip = new ZipArchive();
                 // open archive
-                $_SESSION['fileName']=basePath.userId.time().'.zip';
-                if ($zip->open($_SESSION['fileName'], ZIPARCHIVE::OVERWRITE) !== TRUE) {
+                $filename="";
+                if($type=='background')
+                {
+                    $filename=$_SESSION['fileName'];
+                    $_SESSION['fileName']=$path.'.zip';
+                    $_SESSION['backFile']=$_SESSION['fileName'];
+                }else{
+                    $_SESSION['fileName']=$path.'.zip';
+                }
+
+                if ($zip->open($path.'.zip', ZIPARCHIVE::OVERWRITE) !== TRUE) {
                     die("Could not open archive");
                 }
                 // initialize an iterator
                 // pass it the directory to be processed
-                //echo $basePath.$userId.'/Main/';
-                $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(basePath.userId.'/'));
+                //echo basePath.userId.'/Main/';
+                $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path.'/'));
                 // iterate over the directory
                 // add each file found to the archive
                 foreach ($iterator as $key=>$value) {
 
-               
                     $key = str_replace("\\", "/", $key);
                     $key = str_replace("\\", "/", $key);
                     $key = str_replace("\\", "/", $key);
@@ -135,8 +171,8 @@ require 'picasa.php';
                     $value = str_replace("\\", "/", $value);
                     $value = str_replace("\\", "/", $value);
 
-                    $newKey = str_replace(basePath.userId."/", "", $key);
-  	      if($type=='single')
+                    $newKey = str_replace($path."/", "", $key);
+                    if($type=='single')
 		      {
 	  			if($newKey!="" and $newKey!=".." and $newKey!=".")
                     		{
@@ -162,36 +198,32 @@ require 'picasa.php';
 
                 }
 
-
                 $zip->close();
-		 echo "1";
+            }
+                if($type=='background')
+                {
+                    $_SESSION['fileName']=$filename;
+                }
+            
 
-            }else{
-		echo "0";
-	     }
             //delete folder
-            if(is_dir(basePath.userId))
+            if(is_dir($path))
             {
-                album::recursive_remove_directory(basePath.userId,$empty=TRUE);
-                rmdir(basePath.userId);
+                album::recursive_remove_directory($path,$empty=TRUE);
+                rmdir($path);
 
             }
         }
 
-        //For single Photo
+         //For single Photo
         function downloadalbum()
         {
             error_reporting(E_ERROR);
             $move=$_REQUEST['move'];
             //if dump folder for particuler user is available then delete old one and make new directory
-
-            if(is_dir(basePath.userId))
-            {
-                album::recursive_remove_directory(basePath.userId,$empty=TRUE);
-                rmdir(basePath.userId);
-
-            }
-            mkdir(basePath.userId);
+            $timestamp=time();
+            $path=basePath.userId.$timestamp;
+            mkdir($path);
 
             $facebook = new Facebook(array(
                 'appId'  => appId,
@@ -204,17 +236,23 @@ require 'picasa.php';
             if(isset($SinglePhoto['images']))
             {
                 $ext=pathinfo($SinglePhoto['images'][0]['source']);
-                copy($SinglePhoto['images'][0]['source'],basePath.userId.'/'.$ext['filename'].'.'.$ext['extension']);
+                copy($SinglePhoto['images'][0]['source'],$path.'/'.$ext['filename'].'.'.$ext['extension']);
                 if($move==1)
                 {
                     $client = picasa::getAuthSubHttpClient();
-                    picasa::addPhoto($client,'',basePath.userId.'/'.$ext['filename'].'.'.$ext['extension'],$ext['extension'],$ext['filename'],'single');
+                    picasa::addPhoto($client,'',$path.'/'.$ext['filename'].'.'.$ext['extension'],$ext['extension'],$ext['filename'],'single');
+			
+		      if(is_dir($path))
+            	      {
+                      album::recursive_remove_directory($path,$empty=TRUE);
+                      rmdir($path);
+                    }
                 }
-                echo 'success';
             }else{
                 echo 'error';
             }
-            album::zip($move,'single');
+            album::zip($move,'single',$timestamp);
+            echo $timestamp;
         }
 
         //Download Zip file
@@ -226,10 +264,50 @@ require 'picasa.php';
                 header("Content-Disposition:attachment;filename=".userId.'.zip');
                 header('Content-Type: application/zip');
                 header("Content-Transfer-Encoding: binary");
-                readfile($_SESSION['fileName']);
+                readfile(basePath.$_SESSION['user_id'].$_REQUEST['timestamp'].'.zip');
+
             }else{
                 echo "error";
             }
+        }
+
+        function downloadBack()
+        {
+            error_reporting(E_ERROR);
+            $albumId=$_REQUEST['selected_checkbox'];
+            $move=$_REQUEST['move'];
+            $timestamp=time();
+            $path=basePath.userId.$timestamp;
+            $facebook = new Facebook(array(
+                'appId'  => appId,
+                'secret' => appSecret,
+            ));
+
+
+            mkdir($path);
+
+            $albums=explode(',',$albumId);
+            for($i=0;$i<count($albums);$i++)
+            {
+                $aid=trim($albums[$i]);
+                $photos = $facebook->api("/$aid/photos?access_token=".$facebook->getAccessToken());
+                $AlbumName=$facebook->api("/$aid?access_token=".$facebook->getAccessToken());
+                $temp = str_replace('.', '-', $AlbumName['name']);
+                $aname=preg_replace('/[^A-Za-z0-9\-]/', '', $temp);
+                if (!is_dir($path.'/'.$aname))
+                {
+                    mkdir($path.'/'.$aname);
+                }
+                //Create Album if Move
+                for($j=0;$j<count($photos['data']);$j++)
+                {
+                    set_time_limit(0);
+                    $ext=pathinfo($photos['data'][$j]['source']);
+                    copy($photos['data'][$j]['source'],$path.'/'.$aname.'/ '.$ext['filename'].'.'.$ext['extension']);
+                }
+            }
+            album::zip($move,'background',$timestamp);
+            album::email($path.'.zip',$_REQUEST['email']);
         }
 
         //Recursive Remove directory
@@ -298,5 +376,57 @@ require 'picasa.php';
                 // return success
                 return TRUE;
             }
+        }
+
+	 // Sent Email With Zip link
+
+        function email($filename,$email)
+        {
+            error_reporting(E_ERROR);
+
+            $message = '<html>
+
+                            <body>
+                                <div style="border:1px solid #ccc;">
+                                    <div style="padding:20px;text-size:16px;color:#fff;background:#2BA6CB;border-bottom:1px solid #ccc;">Album App</div>
+                                    <div style="padding:20px; color:#666666;">
+                                        <p><b>Hello '.$_SESSION['user_name'].',</b></p><br />
+                                        <p>Thank you for using our service.</p>
+					      <p>To Download Your zipped album,Click on <a href=http://50.112.48.91/'.$filename.'>http://50.112.48.91/'.$filename.'</a></p><br/>
+                                        <p>Album App <br>Director </p>
+                                    <div>
+                                </div>
+                            </body>
+                            </html>';
+
+              $subject='Album Zip Link';
+              $to =$email;
+
+		$mail = new PHPMailer;
+
+		$mail->IsSMTP();                                      // Set mailer to use SMTP
+		$mail->Host = 'smtp.gmail.com';  // Specify main and backup server
+		$mail->SMTPAuth = true;                               // Enable SMTP authentication
+		$mail->Username = 'amitsinh.chavda13@gmail.com';                            // SMTP username
+		$mail->Password = 'amit_1902_chavda';                           // SMTP password
+		$mail->SMTPSecure = 'tls';                            // Enable encryption, 'ssl' also accepted
+		
+		$mail->From = 'Notification@AlbumApp.com';
+		$mail->FromName = 'AlbumApp Notification';
+		$mail->AddAddress($email, $_SESSION['user_name']);  // Add a recipient
+		$mail->WordWrap = 50;                                 // Set word wrap to 50 characters
+		$mail->IsHTML(true);                                  // Set email format to HTML
+		$mail->Subject = 'Zip Link';
+		$mail->Body    = $message;
+		
+
+		if(!$mail->Send()) {
+		    echo 'Message could not be sent.';
+		    echo 'Mailer Error: ' . $mail->ErrorInfo;
+		    exit;
+		} 
+           
+            
+            echo $email;
         }
     }
