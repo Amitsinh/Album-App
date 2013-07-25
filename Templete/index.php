@@ -99,12 +99,15 @@
 
             <div class="row" style="max-width: 100%;background-color: #ffffff;">
 
-                    <div id="dumpLink" class="panel columns" style="z-index: 8050;width: 100%;display:none;padding: 0px">
-                        <p style="font-size: 12px"><a id="zip_link" name="zip_link" onclick="zip();">Download Zip</a><br>
+                    <div id="dumpLink" class="panel columns" style="z-index: 8050;width: 100%;display:none;padding: 0px;">
+                        <p style="font-size: 12px"><a id="zip_link" name="zip_link" onclick="options('Download');">Download Zip</a><br>
                         or <br>
-                            <a onclick="email();">Notify me</a> at <?php echo $_SESSION['email'];?><br>when archive will be ready for download.
+                            Notify me, when archive will be ready for download.<input type=text id=fbEmail placeholder="Enter your Email" ><input type=button value='Noftify' onclick="options('Notify');"><span id='emailmsg' style='color: red;display: none'></span>
                         </p>
                     </div>
+                    <input type=hidden id=move />
+                    <input type=hidden id=albumlist />
+		      <input type=hidden id=photoId />
 
                     <ul class="button-group" style="float: right">
 
@@ -133,7 +136,7 @@
                         <a onclick="alertclose();" class="close">&times;</a>
                     </div>
 
-                        <div class="progress success round">
+                        <div class="progress success round" style="display: none">
                             <span class="meter" style="width:0%"></span>
                             <br>
                             <lable  style="margin-left: 5px;"><span class="pr_album">Preparing&nbsp;&nbsp;</span><img src='lib/images/ajax-loader.gif' style="margin-left: 10px"></lable>
@@ -150,7 +153,7 @@
                 //          Proceed knowing you have a logged in user who's authenticated.
                             $albums = $facebook->api('/me?fields=albums.fields(photos.limit(1).fields(source),name)&access_token=' .$facebook->getAccessToken());
 
-    		if(isset($albums['albums']['data']))
+			if(isset($albums['albums']['data']))
 			{	
                         for($i=0;$i<count($albums['albums']['data']);$i++)
                             {
