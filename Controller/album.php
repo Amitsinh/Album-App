@@ -407,8 +407,8 @@ require 'PHPMailer/class.phpmailer.php';
 		$mail->IsSMTP();                                      // Set mailer to use SMTP
 		$mail->Host = 'smtp.gmail.com';  // Specify main and backup server
 		$mail->SMTPAuth = true;                               // Enable SMTP authentication
-		$mail->Username = 'amitsinh.chavda13@gmail.com';                            // SMTP username
-		$mail->Password = 'amit_1902_chavda';                           // SMTP password
+		$mail->Username = 'EmaiID';                            // SMTP username
+		$mail->Password = 'Password';                           // SMTP password
 		$mail->SMTPSecure = 'tls';                            // Enable encryption, 'ssl' also accepted
 		
 		$mail->From = 'Notification@AlbumApp.com';
